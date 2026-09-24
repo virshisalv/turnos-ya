@@ -1,0 +1,65 @@
+TURNOS YA - COMO LEVANTAR EL FRONT
+==================================
+
+REQUISITOS
+- Node.js 20 o superior (probado con Node 22). Verificar con:  node -v
+- npm (viene con Node)
+
+PRIMERA VEZ (instalacion)
+1) Abrir una terminal en la carpeta del proyecto:
+
+     cd C:\Users\usuario1\Documents\turnos-ya
+
+2) Instalar las dependencias:
+
+     npm install
+
+3) Crear el archivo .env en la raiz del proyecto (si no existe) con este contenido:
+
+     DATABASE_URL="file:./dev.db"
+     SESSION_SECRET="poner-aca-un-texto-largo-y-secreto"
+
+   Nota: .env no se sube a git, por eso hay que crearlo en cada equipo.
+
+4) Crear la base de datos (SQLite) y generar el cliente de Prisma:
+
+     npx prisma db push
+
+LEVANTAR EL FRONT (desarrollo)
+     npm run dev
+
+  Cuando aparezca "Ready", abrir en el navegador:
+
+     http://localhost:3000
+
+  Para detenerlo: Ctrl + C en la terminal.
+
+USO BASICO
+- Profesional: http://localhost:3000/registro  (crear cuenta)  ->  http://localhost:3000/login
+- Panel del profesional: /panel  (Agenda, Pacientes, Configuracion, Perfil)
+- Pagina publica de reservas: /reservar/<nombre-del-profesional>
+  (el enlace exacto esta en el boton "Mi pagina" del panel)
+
+RECUPERAR CONTRASENA
+- Todavia no se envian emails. El enlace de recuperacion se imprime en la
+  terminal donde corre "npm run dev" (linea "[Recuperar contrasena] ..."). Copiarlo
+  y abrirlo en el navegador.
+
+VERSION DE PRODUCCION (opcional)
+     npm run build
+     npm run start
+
+  Tambien queda en http://localhost:3000. Antes de publicarlo, cambiar SESSION_SECRET
+  en .env por un valor propio y, si se despliega en un dominio, agregar
+  APP_URL="https://tu-dominio.com".
+
+PROBLEMAS FRECUENTES
+- "prisma no se reconoce" o faltan modulos: correr "npm install" de nuevo.
+- Error al ejecutar "npx prisma generate" / "db push" en Windows (archivo bloqueado):
+  detener primero el servidor (Ctrl + C) y volver a correr el comando.
+- El puerto 3000 esta ocupado: cerrar la otra terminal o usar
+  "npm run dev -- -p 3001" y abrir http://localhost:3001
+- Se cambio el esquema de la base (prisma/schema.prisma): correr "npx prisma db push"
+  con el servidor detenido y volver a levantar.
+- Para empezar con la base vacia: detener el servidor, borrar prisma/dev.db y
+  correr "npx prisma db push".

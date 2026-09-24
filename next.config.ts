@@ -1,7 +1,10 @@
 import type { NextConfig } from "next";
 
 const nextConfig: NextConfig = {
-  /* config options here */
+  experimental: {
+    // Las fotos de perfil (hasta 2 MB) viajan en un server action.
+    serverActions: { bodySizeLimit: "3mb" },
+  },
 };
 
 export default nextConfig;

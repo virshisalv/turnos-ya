@@ -7,3 +7,7 @@ export const todayStr = () => {
   const d = new Date();
   return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 };
+
+/** "Apellido, Nombre" para mostrar y ordenar pacientes. */
+export const patientName = (p: { name: string; lastName: string }) =>
+  p.lastName ? `${p.lastName}, ${p.name}` : p.name;

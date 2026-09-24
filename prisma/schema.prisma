@@ -15,8 +15,16 @@ model Professional {
   name         String
   profession   String
   slug         String   @unique
+  phone        String   @default("")
+  license      String   @default("") // matrícula profesional
+  address      String   @default("") // lugar de atención (consultorio / dirección)
+  bio          String   @default("")
   createdAt    DateTime @default(now())
 
+  photo        ProfessionalPhoto?
+  educations   Education[]
+  workplaces   Workplace[]
+  resets       PasswordReset[]
   availability Availability[]
   services     Service[]
   patients     Patient[]
@@ -48,7 +56,8 @@ model Patient {
   id             String       @id @default(cuid())
   professionalId String
   professional   Professional @relation(fields: [professionalId], references: [id], onDelete: Cascade)
-  name           String
+  name           String // nombre de pila
+  lastName       String       @default("")
   email          String
   phone          String
   birthDate      String?
@@ -95,4 +104,47 @@ model Appointment {
   createdAt      DateTime     @default(now())
 
   @@index([professionalId, start])
+}
+
+// Token de un solo uso para restablecer la contraseña (se guarda solo el hash)
+model PasswordReset {
+  id             String       @id @default(cuid())
+  professionalId String
+  professional   Professional @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+  tokenHash      String       @unique
+  expiresAt      DateTime
+  usedAt         DateTime?
+  createdAt      DateTime     @default(now())
+}
+
+// Foto de perfil en tabla aparte para no cargar los bytes en cada consulta del profesional
+model ProfessionalPhoto {
+  professionalId String       @id
+  professional   Professional @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+  data           Bytes
+  contentType    String
+  updatedAt      DateTime     @updatedAt
+}
+
+// Trayecto académico
+model Education {
+  id             String       @id @default(cuid())
+  professionalId String
+  professional   Professional @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+  title          String
+  institution    String
+  startYear      Int?
+  endYear        Int? // null = en curso
+}
+
+// Lugares de trabajo
+model Workplace {
+  id             String       @id @default(cuid())
+  professionalId String
+  professional   Professional @relation(fields: [professionalId], references: [id], onDelete: Cascade)
+  name           String
+  role           String       @default("")
+  address        String       @default("")
+  startYear      Int?
+  endYear        Int? // null = actualmente
 }

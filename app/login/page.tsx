@@ -10,8 +10,11 @@ export default function LoginPage() {
       <div className={card}>
         <AuthForm action={login} mode="login" />
       </div>
-      <p className="mt-4 text-center text-sm text-slate-600">
-        ¿No tenés cuenta? <Link href="/registro" className="text-teal-700 underline">Registrate</Link>
+      <p className="mt-4 text-center text-sm">
+        <Link href="/recuperar" className="text-teal-700 underline">¿Olvidaste tu contraseña?</Link>
+      </p>
+      <p className="mt-2 text-center text-sm text-slate-600">
+        ¿No tenés cuenta? <Link href="/registro" className="text-teal-700 underline">Crear cuenta</Link>
       </p>
     </main>
   );

@@ -1,9 +1,9 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { requireProfessional } from "@/lib/auth";
-import { fmtTime } from "@/lib/format";
+import { fmtTime, patientName } from "@/lib/format";
 import { setAppointmentStatus } from "../actions";
-import { Badge, btnGhost, card } from "../ui";
+import { Badge, btn, btnGhost, card } from "../ui";
 
 export const dynamic = "force-dynamic";
 
@@ -28,7 +28,10 @@ export default async function AgendaPage() {
 
   return (
     <>
-      <h1 className="mb-4 text-2xl font-bold">Agenda</h1>
+      <div className="mb-4 flex flex-wrap items-center justify-between gap-3">
+        <h1 className="text-2xl font-bold">Agenda</h1>
+        <Link href="/panel/horarios" className={btn}>Configurar horarios de la semana</Link>
+      </div>
       {appts.length === 0 && (
         <p className="text-slate-500">
           No hay turnos próximos. Compartí tu página: <Link className="text-teal-700 underline" href={`/reservar/${pro.slug}`}>/reservar/{pro.slug}</Link>
@@ -46,7 +49,7 @@ export default async function AgendaPage() {
                       {fmtTime(a.start)} – {fmtTime(a.end)} · {a.service.name}
                     </div>
                     <Link href={`/panel/pacientes/${a.patientId}`} className="text-sm text-teal-700 hover:underline">
-                      {a.patient.name}
+                      {patientName(a.patient)}
                     </Link>
                     {a.reason && <div className="text-xs text-slate-500">{a.reason}</div>}
                   </div>

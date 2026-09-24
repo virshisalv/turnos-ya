@@ -2,6 +2,7 @@
 
 import { useActionState, useEffect, useState } from "react";
 import { book, fetchSlots } from "../../actions";
+import { stripPhoneChars } from "@/lib/phone";
 import { btn, input, label } from "../../ui";
 
 type Service = { id: string; name: string; durationMin: number };
@@ -11,14 +12,16 @@ export default function BookingForm({
   professionalId,
   services,
   today,
+  weekdays,
 }: {
   slug: string;
   professionalId: string;
   services: Service[];
   today: string;
+  weekdays: number[];
 }) {
   const [error, formAction, pending] = useActionState(book.bind(null, slug), null);
-  const [serviceId, setServiceId] = useState(services[0]?.id ?? "");
+  const serviceId = services[0]?.id ?? "";
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [slots, setSlots] = useState<string[] | null>(null);
@@ -47,19 +50,8 @@ export default function BookingForm({
       <input type="hidden" name="time" value={time} />
 
       <div>
-        <label className={label}>Tipo de atención</label>
-        <select className={input} value={serviceId} onChange={(e) => setServiceId(e.target.value)}>
-          {services.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.name} ({s.durationMin} min)
-            </option>
-          ))}
-        </select>
-      </div>
-
-      <div>
-        <label className={label}>Día</label>
-        <input type="date" min={today} className={input} value={date} onChange={(e) => setDate(e.target.value)} />
+        <label className={label}>Elegí un día</label>
+        <Calendar today={today} weekdays={weekdays} value={date} onChange={setDate} />
       </div>
 
       {date && (
@@ -92,12 +84,28 @@ export default function BookingForm({
 
       <div className="grid gap-4 sm:grid-cols-2">
         <div>
-          <label className={label}>Nombre y apellido</label>
-          <input name="name" className={input} required />
+          <label className={label}>Nombre</label>
+          <input name="name" className={input} autoComplete="given-name" required />
+        </div>
+        <div>
+          <label className={label}>Apellido</label>
+          <input name="lastName" className={input} autoComplete="family-name" required />
         </div>
         <div>
           <label className={label}>Teléfono</label>
-          <input name="phone" className={input} required />
+          <input
+          name="phone"
+          className={input}
+          required
+          type="tel"
+          inputMode="tel"
+          autoComplete="tel"
+          maxLength={20}
+          pattern="\+?[0-9\s\-\(\)]{8,20}"
+          title="Solo números (entre 8 y 15 dígitos). Ej: +54 9 11 2345-6789"
+          placeholder="Ej: 11 2345-6789"
+          onInput={(e) => (e.currentTarget.value = stripPhoneChars(e.currentTarget.value))}
+        />
         </div>
         <div>
           <label className={label}>Email</label>
@@ -118,5 +126,68 @@ export default function BookingForm({
         {pending ? "Reservando..." : "Confirmar turno"}
       </button>
     </form>
+  );
+}
+
+const MONTHS = ["Enero", "Febrero", "Marzo", "Abril", "Mayo", "Junio", "Julio", "Agosto", "Septiembre", "Octubre", "Noviembre", "Diciembre"];
+const DOW = ["L", "M", "X", "J", "V", "S", "D"];
+const pad = (n: number) => String(n).padStart(2, "0");
+
+function Calendar({
+  today,
+  weekdays,
+  value,
+  onChange,
+}: {
+  today: string;
+  weekdays: number[];
+  value: string;
+  onChange: (d: string) => void;
+}) {
+  const [ty, tm] = today.split("-").map(Number);
+  const [view, setView] = useState({ y: ty, m: tm - 1 });
+  const first = new Date(view.y, view.m, 1);
+  const offset = (first.getDay() + 6) % 7; // semana desde lunes
+  const daysInMonth = new Date(view.y, view.m + 1, 0).getDate();
+  const cells: (number | null)[] = [...Array(offset).fill(null), ...Array.from({ length: daysInMonth }, (_, i) => i + 1)];
+  const isCurrentMonth = view.y === ty && view.m === tm - 1;
+  const shift = (d: number) =>
+    setView((v) => {
+      const dt = new Date(v.y, v.m + d, 1);
+      return { y: dt.getFullYear(), m: dt.getMonth() };
+    });
+
+  return (
+    <div className="max-w-xs rounded-xl border border-slate-200 p-3">
+      <div className="mb-2 flex items-center justify-between">
+        <button type="button" onClick={() => shift(-1)} disabled={isCurrentMonth} className="rounded px-2 py-1 text-slate-600 hover:bg-slate-100 disabled:opacity-30" aria-label="Mes anterior">‹</button>
+        <span className="text-sm font-semibold">{MONTHS[view.m]} {view.y}</span>
+        <button type="button" onClick={() => shift(1)} className="rounded px-2 py-1 text-slate-600 hover:bg-slate-100" aria-label="Mes siguiente">›</button>
+      </div>
+      <div className="grid grid-cols-7 gap-1 text-center text-xs">
+        {DOW.map((d) => (
+          <div key={d} className="py-1 font-medium text-slate-400">{d}</div>
+        ))}
+        {cells.map((day, i) => {
+          if (!day) return <div key={i} />;
+          const str = `${view.y}-${pad(view.m + 1)}-${pad(day)}`;
+          const enabled = str >= today && weekdays.includes(new Date(view.y, view.m, day).getDay());
+          const selected = str === value;
+          return (
+            <button
+              type="button"
+              key={i}
+              disabled={!enabled}
+              onClick={() => onChange(str)}
+              className={`rounded-lg py-1.5 text-sm ${
+                selected ? "bg-teal-700 font-semibold text-white" : enabled ? "hover:bg-teal-50 text-slate-900" : "text-slate-300"
+              }`}
+            >
+              {day}
+            </button>
+          );
+        })}
+      </div>
+    </div>
   );
 }

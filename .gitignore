@@ -39,3 +39,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+# base de datos local y archivos de Netlify
+/prisma/*.db
+/prisma/*.db-journal
+.netlify
+!.env.example
