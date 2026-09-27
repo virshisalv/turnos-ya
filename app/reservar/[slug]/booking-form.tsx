@@ -25,6 +25,8 @@ export default function BookingForm({
   const [date, setDate] = useState("");
   const [time, setTime] = useState("");
   const [slots, setSlots] = useState<string[] | null>(null);
+  const [isMobile, setIsMobile] = useState(false);
+  const [showCalendar, setShowCalendar] = useState(true);
 
   useEffect(() => {
     setTime("");
@@ -40,6 +42,17 @@ export default function BookingForm({
     };
   }, [professionalId, serviceId, date]);
 
+  useEffect(() => {
+    const update = () => {
+      const mobile = typeof window !== "undefined" && window.innerWidth <= 640; // sm breakpoint
+      setIsMobile(mobile);
+      setShowCalendar(mobile ? true : true);
+    };
+    update();
+    window.addEventListener("resize", update);
+    return () => window.removeEventListener("resize", update);
+  }, []);
+
   if (services.length === 0)
     return <p className="text-slate-500">Este profesional todavía no configuró tipos de atención.</p>;
 
@@ -49,13 +62,33 @@ export default function BookingForm({
       <input type="hidden" name="date" value={date} />
       <input type="hidden" name="time" value={time} />
 
-      <div>
-        <label className={label}>Elegí un día</label>
-        <Calendar today={today} weekdays={weekdays} value={date} onChange={setDate} />
-      </div>
-
-      {date && (
+      {/* Calendario: en móvil ocupa la pantalla; al elegir día se oculta y muestra el formulario */}
+      {isMobile ? (
+        showCalendar ? (
+          <div>
+            <label className={label}>Elegí un día</label>
+            <Calendar today={today} weekdays={weekdays} value={date} onChange={(d) => {
+              setDate(d);
+              setShowCalendar(false);
+            }} fullHeight />
+          </div>
+        ) : null
+      ) : (
         <div>
+          <label className={label}>Elegí un día</label>
+          <Calendar today={today} weekdays={weekdays} value={date} onChange={setDate} />
+        </div>
+      )}
+
+      {/* Si estamos en móvil y el calendario está visible, ocultamos el formulario hasta elegir día */}
+      {(!isMobile || !showCalendar) && date && (
+        <div>
+          {isMobile && (
+            <div className="mb-2 flex items-center gap-2">
+              <button type="button" onClick={() => setShowCalendar(true)} className="text-sm text-slate-600 underline">← Volver</button>
+              <span className="text-sm text-slate-500">{date}</span>
+            </div>
+          )}
           <label className={label}>Horario</label>
           {slots === null ? (
             <p className="text-sm text-slate-500">Buscando horarios...</p>
@@ -138,11 +171,13 @@ function Calendar({
   weekdays,
   value,
   onChange,
+  fullHeight = false,
 }: {
   today: string;
   weekdays: number[];
   value: string;
   onChange: (d: string) => void;
+  fullHeight?: boolean;
 }) {
   const [ty, tm] = today.split("-").map(Number);
   const [view, setView] = useState({ y: ty, m: tm - 1 });
@@ -158,13 +193,13 @@ function Calendar({
     });
 
   return (
-    <div className="max-w-xs rounded-xl border border-slate-200 p-3">
+    <div className={`${fullHeight ? "w-full max-w-none h-[calc(100vh-6rem)] rounded-none p-4" : "max-w-xs rounded-xl border border-slate-200 p-3"} overflow-hidden`}>
       <div className="mb-2 flex items-center justify-between">
         <button type="button" onClick={() => shift(-1)} disabled={isCurrentMonth} className="rounded px-2 py-1 text-slate-600 hover:bg-slate-100 disabled:opacity-30" aria-label="Mes anterior">‹</button>
         <span className="text-sm font-semibold">{MONTHS[view.m]} {view.y}</span>
         <button type="button" onClick={() => shift(1)} className="rounded px-2 py-1 text-slate-600 hover:bg-slate-100" aria-label="Mes siguiente">›</button>
       </div>
-      <div className="grid grid-cols-7 gap-1 text-center text-xs">
+      <div className={`${fullHeight ? "overflow-auto" : ""} grid grid-cols-7 gap-1 text-center text-xs`}>
         {DOW.map((d) => (
           <div key={d} className="py-1 font-medium text-slate-400">{d}</div>
         ))}

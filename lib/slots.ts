@@ -28,9 +28,10 @@ export async function getFreeSlots(professionalId: string, date: string, duratio
     },
   });
   const now = Date.now();
+  const SLOT_STEP_MIN = 15; // comprobar cada 15 minutos para evitar solapamientos
   const slots = new Set<string>();
   for (const b of blocks) {
-    for (let t = toMin(b.startTime); t + durationMin <= toMin(b.endTime); t += durationMin) {
+    for (let t = toMin(b.startTime); t + durationMin <= toMin(b.endTime); t += SLOT_STEP_MIN) {
       const start = parseLocal(date, fromMin(t));
       const end = new Date(start.getTime() + durationMin * 60000);
       if (start.getTime() <= now) continue;
