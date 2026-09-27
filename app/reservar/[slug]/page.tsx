@@ -96,13 +96,17 @@ export default async function ReservarPage({ params }: { params: Promise<{ slug:
       )}
 
       <div id="solicitar-turno" className={`${card} scroll-mt-4`}>
-        <BookingForm
-          slug={pro.slug}
-          professionalId={pro.id}
-          services={pro.services.map((s) => ({ id: s.id, name: s.name, durationMin: s.durationMin }))}
-          today={todayStr()}
-          weekdays={[...new Set(pro.availability.map((a) => a.weekday))]}
-        />
+        {pro.suspended ? (
+          <p className="text-slate-500">Este profesional no está disponible para solicitar turnos en este momento.</p>
+        ) : (
+          <BookingForm
+            slug={pro.slug}
+            professionalId={pro.id}
+            services={pro.services.map((s) => ({ id: s.id, name: s.name, durationMin: s.durationMin }))}
+            today={todayStr()}
+            weekdays={[...new Set(pro.availability.map((a) => a.weekday))]}
+          />
+        )}
       </div>
     </main>
   );

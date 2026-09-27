@@ -10,6 +10,7 @@ export const dynamic = "force-dynamic";
 export default async function Home() {
   const [pros, me] = await Promise.all([
     db.professional.findMany({
+      where: { suspended: false },
       orderBy: { name: "asc" },
       include: {
         photo: { select: { updatedAt: true } },
@@ -84,6 +85,12 @@ export default async function Home() {
           })}
         </div>
       )}
+
+      <footer className="mt-16 text-center">
+        <Link href="/admin/login" className="text-xs text-slate-400 hover:text-slate-600">
+          Panel de administración
+        </Link>
+      </footer>
     </main>
   );
 }

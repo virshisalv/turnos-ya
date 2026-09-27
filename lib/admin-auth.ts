@@ -3,45 +3,42 @@ import { redirect } from "next/navigation";
 import { SignJWT, jwtVerify } from "jose";
 import { db } from "./db";
 
-const COOKIE = "session";
+// Cookie y JWT separados de la sesión de los profesionales: un admin y un
+// profesional pueden estar logueados a la vez en el mismo navegador sin pisarse.
+const COOKIE = "admin_session";
 const key = () => new TextEncoder().encode(process.env.SESSION_SECRET ?? "dev-secret");
 
-export async function createSession(professionalId: string) {
-  const token = await new SignJWT({ sub: professionalId })
+export async function createAdminSession(adminId: string) {
+  const token = await new SignJWT({ sub: adminId, role: "admin" })
     .setProtectedHeader({ alg: "HS256" })
     .setExpirationTime("14d")
     .sign(key());
   (await cookies()).set(COOKIE, token, {
     httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
     sameSite: "lax",
     path: "/",
     maxAge: 60 * 60 * 24 * 14,
   });
 }
 
-export async function destroySession() {
+export async function destroyAdminSession() {
   (await cookies()).delete(COOKIE);
 }
 
-export async function getProfessional() {
+export async function getAdmin() {
   const token = (await cookies()).get(COOKIE)?.value;
   if (!token) return null;
   try {
     const { payload } = await jwtVerify(token, key());
-    return await db.professional.findUnique({ where: { id: String(payload.sub) } });
+    if (payload.role !== "admin") return null;
+    return await db.admin.findUnique({ where: { id: String(payload.sub) } });
   } catch {
     return null;
   }
 }
 
-export async function requireProfessional() {
-  const pro = await getProfessional();
-  if (!pro) redirect("/login");
-  if (pro.suspended) {
-    // La cuenta fue suspendida por un admin después de haber iniciado sesión: se cierra acá.
-    await destroySession();
-    redirect("/login?suspendida=1");
-  }
-  return pro;
+export async function requireAdmin() {
+  const admin = await getAdmin();
+  if (!admin) redirect("/admin/login");
+  return admin;
 }

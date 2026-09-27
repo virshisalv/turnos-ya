@@ -3,10 +3,16 @@ import { login } from "../actions";
 import AuthForm from "../auth-form";
 import { card } from "../ui";
 
-export default function LoginPage() {
+export default async function LoginPage({ searchParams }: { searchParams: Promise<{ suspendida?: string }> }) {
+  const { suspendida } = await searchParams;
   return (
     <main className="mx-auto max-w-sm px-4 py-16">
       <h1 className="mb-6 text-2xl font-bold">Ingresar</h1>
+      {suspendida && (
+        <p className="mb-4 rounded-lg bg-amber-50 px-3 py-2 text-sm text-amber-800">
+          Esta cuenta fue suspendida por un administrador. Contactá a soporte.
+        </p>
+      )}
       <div className={card}>
         <AuthForm action={login} mode="login" />
       </div>

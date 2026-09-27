@@ -19,6 +19,7 @@ model Professional {
   license      String   @default("") // matrícula profesional
   address      String   @default("") // lugar de atención (consultorio / dirección)
   bio          String   @default("")
+  suspended    Boolean  @default(false) // si un admin la suspende, no puede ingresar ni recibir turnos nuevos
   createdAt    DateTime @default(now())
 
   photo        ProfessionalPhoto?
@@ -147,4 +148,13 @@ model Workplace {
   address        String       @default("")
   startYear      Int?
   endYear        Int? // null = actualmente
+}
+
+// Administrador de la plataforma: controla las cuentas de los profesionales
+model Admin {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  createdAt    DateTime @default(now())
 }

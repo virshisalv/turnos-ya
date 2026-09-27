@@ -55,6 +55,7 @@ export async function login(_: string | null, f: FormData): Promise<string | nul
   const pro = await db.professional.findUnique({ where: { email: str(f, "email").toLowerCase() } });
   if (!pro || !(await bcrypt.compare(str(f, "password"), pro.passwordHash)))
     return "Email o contraseña incorrectos.";
+  if (pro.suspended) return "Esta cuenta fue suspendida por un administrador. Contactá a soporte.";
   await createSession(pro.id);
   redirect("/panel");
 }
@@ -139,6 +140,7 @@ export async function fetchSlots(professionalId: string, serviceId: string, date
 export async function book(slug: string, _: string | null, f: FormData): Promise<string | null> {
   const pro = await db.professional.findUnique({ where: { slug } });
   if (!pro) return "Profesional no encontrado.";
+  if (pro.suspended) return "Este profesional no está disponible para solicitar turnos en este momento.";
   const serviceId = str(f, "serviceId"),
     date = str(f, "date"),
     time = str(f, "time");
