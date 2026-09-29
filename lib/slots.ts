@@ -1,4 +1,5 @@
 import { db } from "./db";
+import { zonedToUtc } from "./timezone";
 
 export const toMin = (t: string) => {
   const [h, m] = t.split(":").map(Number);
@@ -7,8 +8,11 @@ export const toMin = (t: string) => {
 export const fromMin = (n: number) =>
   `${String(Math.floor(n / 60)).padStart(2, "0")}:${String(n % 60).padStart(2, "0")}`;
 
-/** Fecha/hora "naive" interpretada en la zona horaria del servidor. */
-export const parseLocal = (date: string, time: string) => new Date(`${date}T${time}:00`);
+/**
+ * Fecha/hora interpretada en la zona horaria de los profesionales (Argentina), no en la del
+ * servidor: así el resultado es el mismo turno guardado desde Netlify (UTC) o desde una PC local.
+ */
+export const parseLocal = zonedToUtc;
 
 export const WEEKDAYS = ["Domingo", "Lunes", "Martes", "Miércoles", "Jueves", "Viernes", "Sábado"];
 

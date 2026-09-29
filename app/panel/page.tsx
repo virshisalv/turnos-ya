@@ -1,7 +1,9 @@
 import Link from "next/link";
 import { db } from "@/lib/db";
 import { requireProfessional } from "@/lib/auth";
-import { fmtTime, patientName } from "@/lib/format";
+import { fmtTime, patientName, todayStr } from "@/lib/format";
+import { parseLocal } from "@/lib/slots";
+import { tz } from "@/lib/timezone";
 import { setAppointmentStatus } from "../actions";
 import { Badge, btn, btnGhost, card } from "../ui";
 
@@ -9,8 +11,7 @@ export const dynamic = "force-dynamic";
 
 export default async function AgendaPage() {
   const pro = await requireProfessional();
-  const startOfToday = new Date();
-  startOfToday.setHours(0, 0, 0, 0);
+  const startOfToday = parseLocal(todayStr(), "00:00");
 
   const appts = await db.appointment.findMany({
     where: { professionalId: pro.id, start: { gte: startOfToday } },
@@ -22,7 +23,7 @@ export default async function AgendaPage() {
   // Agrupar por día
   const byDay = new Map<string, typeof appts>();
   for (const a of appts) {
-    const key = a.start.toLocaleDateString("es-AR", { weekday: "long", day: "numeric", month: "long" });
+    const key = a.start.toLocaleDateString("es-AR", { ...tz, weekday: "long", day: "numeric", month: "long" });
     byDay.set(key, [...(byDay.get(key) ?? []), a]);
   }
 
